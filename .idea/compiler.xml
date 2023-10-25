@@ -9,5 +9,8 @@
         <module name="SegundoProyectoDatos1" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="Interfaz" target="16" />
+    </bytecodeTargetLevel>
   </component>
 </project>
