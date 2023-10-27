@@ -9,11 +9,12 @@ package servidor;
 import java.util.EmptyStackException;
 import java.util.Stack;
 
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
+
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Scriptable;
 
 /**
  *
@@ -27,45 +28,31 @@ import org.mozilla.javascript.Scriptable;
  * Más cantidad coloca un operador al principio sin numeros a su izquierda.
  */
 public class ArbolExpresion {
-    public static void main(String []m){
 
-        final String EXPRESION_DE_PRUEBA ="ab+cde+**", Ejmplo2="22/24+467-5****";
-        NodoExpresivo raiz=new NodoExpresivo("");
-        raiz=raiz.CrearArbolDeExpreciones(Ejmplo2);
-        System.out.println("Expresion postfix mostrada en PostOrder");
-        raiz.postOrder();
-        System.out.println("\n\nExpresion Infix mostrada en InOrder");
+    public Object realizarOperacion(String operacion){
 
-        String operacion = raiz.inOrder();
-        System.out.println(operacion);
+        NodoExpresivo raiz = new NodoExpresivo("");
+        raiz=raiz.CrearArbolDeExpreciones(operacion);
+
+        String opera = raiz.inOrder();
 
         Context rhino = Context.enter();
-
         Scriptable scope = rhino.initStandardObjects();
 
         try {
-            Object result = rhino.evaluateString(scope,operacion,"Evaluacion",1,null);
 
-            System.out.println(result);
+            System.out.println("operacion resultante del arbol" + opera);
+
+            return rhino.evaluateString(scope,opera,"Evaluacion",1,null);
 
         }finally {
             Context.exit();
         }
 
-        /*ScriptEngineManager manager = new ScriptEngineManager();
-
-        ScriptEngine engine = manager.getEngineByName("rhino");
-
-        try {
-            Object result = engine.eval(operacion);
-
-            System.out.println("Result: " + result);
-        }catch (ScriptException e){
-            e.printStackTrace();
-        }*/
 
 
     }
+
 }
 
 
