@@ -143,10 +143,6 @@ public class Calculadora implements Runnable{
                     });
                 }
 
-
-
-
-
             }
 
         }
