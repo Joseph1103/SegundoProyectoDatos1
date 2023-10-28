@@ -2,11 +2,12 @@ package servidor;
 
 import auxiliares.InfixToPostfix;
 import auxiliares.Mensaje;
+import auxiliares.RPNConverter;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
+import java.io.*;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -15,13 +16,11 @@ public class Servidor implements Runnable{
     //Server socket
     private ServerSocket serverSocket;
 
-    //arbol de expresion
-    //ArbolExpresion arbolExpresion = new ArbolExpresion();
-
-    NPItoInfix npItoInfix = new NPItoInfix();
-
     //convertidor de expresion matematica a polaca
     InfixToPostfix infixToPostfix = new InfixToPostfix();
+
+    //convertir polaco a arbol de expresion
+    RPNConverter converter = new RPNConverter();
 
     public Servidor() throws IOException {
 
@@ -42,16 +41,32 @@ public class Servidor implements Runnable{
         //convertir expresion matemática a postorder
         String expreToPolaco = infixToPostfix.conversionPosfijo(expresionMatematica);
 
-        //transformar la expresion polaca a una que el arbol pueda entender
-        System.out.println("expresion polaca: " + expreToPolaco);
+        //borra el espacio generado al final de la expresion para evitar errores en la conversion a postfix
+        expreToPolaco = eliminarEspacioFinal(expreToPolaco);
 
-        //hacer el calculo de la expresion
-        //return arbolExpresion.realizarOperacion(expreToPolaco);
+        //convierte la expresion polaca a un arbol de expresion
+        String resultExpresion = converter.convertirInfixToPostFix(expreToPolaco);
 
-        npItoInfix.realizarOperacion(expreToPolaco);
+        //convertir la expresion matemática del string a un resultado
+        Context rhino = Context.enter();
+        Scriptable scope = rhino.initStandardObjects();
 
-        return "hi";
+        try{
+            //hace la operación aritmética y la almacena
+            Object result = rhino.evaluateString(scope, resultExpresion,"Evaluacion",1,null);
 
+            return result;
+
+        }finally {
+            Context.exit();
+        }
+
+
+
+    }
+
+    private String  eliminarEspacioFinal(String input){
+        return input.replaceAll("\\s+$", "");
     }
 
     private void procesarMensajeCliente(Mensaje mensaje){
@@ -62,19 +77,9 @@ public class Servidor implements Runnable{
 
                 Object respuesta = realizarOperacionMatematica(mensaje.getExpresionMatematica());
 
-                if (respuesta instanceof Integer){
-
-                    respuesta = (int) respuesta;
-
-                }
-                else if (respuesta instanceof Float) {
-
-                    respuesta = (float) respuesta;
-
-                }
-
                 System.out.println(respuesta);
 
+                enviarMensajeCliente(respuesta,"respuesta_calculo",mensaje);
 
             }
 
@@ -84,6 +89,32 @@ public class Servidor implements Runnable{
 
             }
 
+        }
+
+    }
+
+    private void enviarMensajeCliente(Object respuesta, String accion,Mensaje mensajeCliente){
+
+        try {
+            //informacion del resultado
+            Mensaje mensaje = new Mensaje();
+            mensaje.setAccion(accion);
+            mensaje.setRespuesta(respuesta);
+
+            //crear el socket para enviar el mensaje
+            Socket socket = new Socket("localhost", mensajeCliente.getPuerto());
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+
+            out.writeObject(mensaje);
+            out.flush();
+
+            socket.close();
+            out.close();
+
+        } catch (ConnectException e){
+            System.out.println("Conexion Rechazada");
+        } catch (IOException e){
+            e.printStackTrace();
         }
 
     }
@@ -103,7 +134,7 @@ public class Servidor implements Runnable{
                 //Socket que se encarga de escuchar solicitudes entrantes de los clientes
                 Socket socket = serverSocket.accept();
 
-                System.out.println("Cliente conectado desde " + socket.getInetAddress().getHostAddress());
+                System.out.println("Cliente conectado desde " + socket.getInetAddress().getHostAddress() + ", Puerto: " + socket.getPort());
 
                 //leer la cadena de texto del socket
                 ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
