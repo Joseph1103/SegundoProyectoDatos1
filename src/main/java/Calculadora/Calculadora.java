@@ -2,24 +2,26 @@ package Calculadora;
 
 import auxiliares.InfixToPostfix;
 import auxiliares.Mensaje;
-import javafx.application.Application;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
+import com.opencsv.exceptions.CsvException;
+import com.opencsv.exceptions.CsvValidationException;
 import javafx.application.Platform;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
+
 
 public class Calculadora implements Runnable{
 
@@ -88,7 +90,10 @@ public class Calculadora implements Runnable{
         button.setStyle("-fx-font-size: 14");
         button.setTranslateX(205);
         button.setTranslateY(250);
-        button.setOnAction(e -> convertirExpresionAPolaco(textField.getText()));
+        button.setOnAction(e -> {
+            convertirExpresionAPolaco(textField.getText());
+            generarTablaGrafica();
+        });
 
         //espacio para desplegar la respuesta
         respuesta.setTextFill(Color.WHITE);
@@ -107,9 +112,6 @@ public class Calculadora implements Runnable{
     }
 
     private void convertirExpresionAPolaco(String expresion){
-
-        //convertir la expresion a polaco
-        String exprePolaco = infixToPostfix.conversionPosfijo(expresion);
 
         enviarMensajeServidor("calcular",expresion);
 
@@ -145,9 +147,61 @@ public class Calculadora implements Runnable{
 
             }
 
+            case "historial" -> {
+
+
+
+            }
+
         }
 
     }
+
+    private void generarTablaGrafica(){
+
+
+        String archivoCSV = "C:\\Users\\josth\\OneDrive\\Escritorio\\Proyecto\\src\\main\\resources\\informacion.csv"; // Nombre de tu archivo CSV
+        int id = 1; // ID al que deseas asignar nuevos datos
+        List<String> nuevasFechas = List.of("12-4-2022", "5-9-2023");
+        List<String> nuevosNumeros = List.of("55", "78");
+
+        try {
+            // Lee el archivo CSV existente
+            CSVReader csvReader = new CSVReader(new FileReader(archivoCSV));
+
+            // Lee todos los registros del archivo CSV
+            List<String[]> registros = csvReader.readAll();
+
+            // Cierra el lector CSV
+            csvReader.close();
+
+            // Agrega los nuevos datos al ID deseado
+            for (int i = 0; i < nuevasFechas.size(); i++) {
+                String nuevaFecha = nuevasFechas.get(i);
+                String nuevoNumero = nuevosNumeros.get(i);
+                registros.add(new String[]{String.valueOf(id), nuevaFecha, nuevoNumero});
+            }
+
+            // Escribe los registros actualizados de vuelta al archivo CSV
+            CSVWriter csvWriter = new CSVWriter(new FileWriter(archivoCSV));
+
+            for (String[] registro : registros) {
+                csvWriter.writeNext(registro);
+            }
+
+            // Cierra el escritor CSV
+            csvWriter.close();
+
+        }
+        catch (CsvException e){
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
     private void enviarMensajeServidor(String accion){
 

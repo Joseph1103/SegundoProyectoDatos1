@@ -93,6 +93,8 @@ public class Servidor implements Runnable{
 
     }
 
+    //private void
+
     private void enviarMensajeCliente(Object respuesta, String accion,Mensaje mensajeCliente){
 
         try {
