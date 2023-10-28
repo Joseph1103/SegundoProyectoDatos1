@@ -2,6 +2,11 @@ package auxiliares;
 
 import java.util.Stack;
 
+/**
+ * Esta clase proporciona métodos para construir un árbol de expresión a partir de una
+ * expresión en notación polaca inversa (RPN) y para convertir dicho árbol en una
+ * expresión infija.
+ */
 class Node {
     String value;
     Node left;
@@ -16,6 +21,12 @@ class Node {
 
 public class RPNConverter {
 
+    /**
+     * Construye un árbol de expresión a partir de una expresión en notación polaca inversa (RPN).
+     *
+     * @param rpn La expresión en notación polaca inversa.
+     * @return El nodo raíz del árbol de expresión.
+     */
     public static Node buildExpressionTree(String rpn) {
         String[] tokens = rpn.split(" ");
         Stack<Node> stack = new Stack<>();
@@ -41,6 +52,12 @@ public class RPNConverter {
         }
     }
 
+    /**
+     * Convierte un árbol de expresión en una expresión infija.
+     *
+     * @param root El nodo raíz del árbol de expresión.
+     * @return La expresión infija resultante.
+     */
     public static String infixExpression(Node root) {
         if (root == null) {
             return "";
@@ -53,22 +70,34 @@ public class RPNConverter {
         }
     }
 
+    /**
+     * Verifica si un token es un operando (número).
+     *
+     * @param token El token que se va a verificar.
+     * @return `true` si el token es un operando, `false` en caso contrario.
+     */
     private static boolean isOperand(String token) {
         return token.matches("-?\\d+(\\.\\d+)?");
     }
 
+    /**
+     * Verifica si un token es un operador.
+     *
+     * @param token El token que se va a verificar.
+     * @return `true` si el token es un operador, `false` en caso contrario.
+     */
     private static boolean isOperator(String token) {
         return token.matches("[+\\-*/%^]");
     }
 
-    /*public static void main(String[] args) {
-        String rpnExpression = "10 3 %";
-        Node expressionTree = buildExpressionTree(rpnExpression);
-        String infixExpression = infixExpression(expressionTree);
-        System.out.println("RPN: " + rpnExpression);
-        System.out.println("Infix: " + infixExpression);
-    }*/
 
+    /**
+     * Convierte una expresión en notación infija en una expresión en notación
+     * posfija (RPN).
+     *
+     * @param expresion La expresión en notación infija que se va a convertir.
+     * @return La expresión en notación RPN.
+     */
     public String convertirInfixToPostFix(String expresion){
 
         Node expressionTree = buildExpressionTree(expresion);

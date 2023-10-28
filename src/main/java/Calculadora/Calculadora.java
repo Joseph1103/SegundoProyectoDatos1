@@ -23,6 +23,11 @@ import java.net.Socket;
 import java.util.List;
 
 
+/**
+ * Esta clase representa una calculadora que permite a los usuarios ingresar expresiones
+ * matemáticas en notación infija, convertirlas a notación polaca inversa y calcular el
+ * resultado utilizando un servidor remoto.
+ */
 public class Calculadora implements Runnable{
 
     //contenedor
@@ -37,6 +42,12 @@ public class Calculadora implements Runnable{
     //instancia de convertidor de expresion a polaco
     InfixToPostfix infixToPostfix = new InfixToPostfix();
 
+    /**
+     * Crea una instancia de la calculadora y establece el puerto en el que escuchará
+     * las conexiones entrantes.
+     *
+     * @param puerto El puerto en el que se escucharán las conexiones entrantes.
+     */
     public Calculadora(int puerto){
 
         try {
@@ -57,6 +68,10 @@ public class Calculadora implements Runnable{
 
     }
 
+    /**
+     * Configura los parámetros de la interfaz de la calculadora, incluyendo la escena,
+     * campos de entrada y botones.
+     */
     public void parametrosCalculadora(){
 
         //escena
@@ -90,10 +105,7 @@ public class Calculadora implements Runnable{
         button.setStyle("-fx-font-size: 14");
         button.setTranslateX(205);
         button.setTranslateY(250);
-        button.setOnAction(e -> {
-            convertirExpresionAPolaco(textField.getText());
-            generarTablaGrafica();
-        });
+        button.setOnAction(e -> convertirExpresionAPolaco(textField.getText()));
 
         //espacio para desplegar la respuesta
         respuesta.setTextFill(Color.WHITE);
@@ -111,12 +123,23 @@ public class Calculadora implements Runnable{
 
     }
 
+    /**
+     * Convierte una expresión en notación infija a notación polaca inversa y la envía
+     * al servidor para su cálculo.
+     *
+     * @param expresion La expresión en notación infija a convertir y calcular.
+     */
     private void convertirExpresionAPolaco(String expresion){
 
         enviarMensajeServidor("calcular",expresion);
 
     }
-
+    /**
+     * Procesa un mensaje recibido del servidor, realizando acciones correspondientes
+     * según la acción especificada en el mensaje.
+     *
+     * @param mensaje El mensaje recibido del servidor.
+     */
     private void procesarMensajeServidor(Mensaje mensaje){
 
         switch (mensaje.getAccion()){
@@ -157,52 +180,15 @@ public class Calculadora implements Runnable{
 
     }
 
-    private void generarTablaGrafica(){
-
-
-        String archivoCSV = "C:\\Users\\josth\\OneDrive\\Escritorio\\Proyecto\\src\\main\\resources\\informacion.csv"; // Nombre de tu archivo CSV
-        int id = 1; // ID al que deseas asignar nuevos datos
-        List<String> nuevasFechas = List.of("12-4-2022", "5-9-2023");
-        List<String> nuevosNumeros = List.of("55", "78");
-
-        try {
-            // Lee el archivo CSV existente
-            CSVReader csvReader = new CSVReader(new FileReader(archivoCSV));
-
-            // Lee todos los registros del archivo CSV
-            List<String[]> registros = csvReader.readAll();
-
-            // Cierra el lector CSV
-            csvReader.close();
-
-            // Agrega los nuevos datos al ID deseado
-            for (int i = 0; i < nuevasFechas.size(); i++) {
-                String nuevaFecha = nuevasFechas.get(i);
-                String nuevoNumero = nuevosNumeros.get(i);
-                registros.add(new String[]{String.valueOf(id), nuevaFecha, nuevoNumero});
-            }
-
-            // Escribe los registros actualizados de vuelta al archivo CSV
-            CSVWriter csvWriter = new CSVWriter(new FileWriter(archivoCSV));
-
-            for (String[] registro : registros) {
-                csvWriter.writeNext(registro);
-            }
-
-            // Cierra el escritor CSV
-            csvWriter.close();
-
-        }
-        catch (CsvException e){
-            e.printStackTrace();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
 
 
+
+    /**
+     * Envía un mensaje al servidor con la acción especificada.
+     *
+     * @param accion La acción a enviar al servidor.
+     */
     private void enviarMensajeServidor(String accion){
 
         try {
@@ -229,6 +215,13 @@ public class Calculadora implements Runnable{
         }
 
     }
+
+    /**
+     * Envía un mensaje al servidor con la acción y la expresión matemática especificadas.
+     *
+     * @param accion     La acción a enviar al servidor.
+     * @param expresion  La expresión matemática a enviar al servidor.
+     */
 
     private void enviarMensajeServidor(String accion, String expresion){
 
@@ -259,6 +252,11 @@ public class Calculadora implements Runnable{
 
     }
 
+    /**
+     * Este método representa la lógica de un hilo que escucha las solicitudes entrantes
+     * de los clientes en el servidor. Cuando se recibe una solicitud, se procesa el mensaje
+     * del cliente llamando al método 'procesarMensajeServidor'.
+     */
     @Override
     public void run(){
 

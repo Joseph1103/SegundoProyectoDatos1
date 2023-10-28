@@ -8,6 +8,10 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import java.util.Random;
 
+/**
+ * Esta clase representa una aplicación para generar instancias de la clase Calculadora
+ * con puertos aleatorios y configurar sus parámetros de interfaz.
+ */
 public class GenerarCalculadoras extends Application {
 
     private Pane contenedorPrincipal = new Pane();
@@ -34,6 +38,10 @@ public class GenerarCalculadoras extends Application {
 
     }
 
+    /**
+     * Configura los parámetros de la interfaz de la aplicación, incluyendo un botón para
+     * generar instancias de la clase Calculadora con puertos aleatorios.
+     */
     private void parametrosInterfaz(){
 
         //boton
@@ -53,6 +61,11 @@ public class GenerarCalculadoras extends Application {
 
     }
 
+    /**
+     * Genera un número aleatorio dentro de un rango específico.
+     *
+     * @return El número aleatorio generado.
+     */
     private int generarNumRandom(){
 
         int min = 12000;

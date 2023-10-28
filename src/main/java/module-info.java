@@ -10,4 +10,6 @@ module com.example.segundoproyectodatos {
     opens Calculadora to javafx.fxml;
 
     exports Calculadora;
+    exports auxiliares;
+    exports servidor;
 }
