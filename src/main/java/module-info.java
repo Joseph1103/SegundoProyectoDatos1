@@ -1,12 +1,12 @@
-module com.example.segundoproyectodatos1 {
+module com.example.segundoproyectodatos {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.graphics;
     requires java.scripting;
     requires js;
 
-
-    opens com.example.segundoproyectodatos1 to javafx.fxml;
     opens servidor to java.scripting;
-    exports com.example.segundoproyectodatos1;
+    opens Calculadora to javafx.fxml;
+
+    exports Calculadora;
 }

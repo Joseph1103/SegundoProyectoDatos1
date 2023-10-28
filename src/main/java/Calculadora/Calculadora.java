@@ -1,40 +1,65 @@
-package com.example.segundoproyectodatos1;
+package Calculadora;
 
 import auxiliares.InfixToPostfix;
 import auxiliares.Mensaje;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.ConnectException;
+import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Calculadora extends Application {
+public class Calculadora implements Runnable{
 
     //contenedor
-    Pane pane = new Pane();
-    Pane contenedorPrincipal = new Pane();
+    private Pane pane = new Pane();
+    private Pane contenedorPrincipal = new Pane();
+    private Label respuesta = new Label();
+
+    private ServerSocket serverSocket;
+
+    private int puerto;
 
     //instancia de convertidor de expresion a polaco
     InfixToPostfix infixToPostfix = new InfixToPostfix();
 
-    public static void main(String[] args) {
-        launch(args);
+    public Calculadora(int puerto){
+
+        try {
+
+            //asignar el puerto de la instancia
+            this.puerto = puerto;
+
+            //puerto a la escucha de conexiones
+            this.serverSocket = new ServerSocket(puerto);
+
+            //iniciar el hilo local
+            Thread thread = new Thread(this);
+            thread.start();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
-    @Override
-    public void start(Stage primaryStage) {
+    public void parametrosCalculadora(){
 
         //escena
         Scene scene = new Scene(pane);
+        Stage primaryStage = new Stage();
         primaryStage.setScene(scene);
         primaryStage.setWidth(600);
         primaryStage.setHeight(411);
@@ -42,15 +67,8 @@ public class Calculadora extends Application {
         primaryStage.show();
         pane.getChildren().add(contenedorPrincipal);
 
-        //carga los elementos graficos de la interfaz
-        parametrosCalculadora();
-
-    }
-
-    public void parametrosCalculadora(){
-
         //imagen de la interfaz
-        Image image = new Image(getClass().getResourceAsStream("background.jpg"));
+        Image image = new Image(getClass().getResourceAsStream("/background.jpg"));
 
         //image view para mostrar la imagen
         ImageView imageView = new ImageView(image);
@@ -72,11 +90,18 @@ public class Calculadora extends Application {
         button.setTranslateY(250);
         button.setOnAction(e -> convertirExpresionAPolaco(textField.getText()));
 
+        //espacio para desplegar la respuesta
+        respuesta.setTextFill(Color.WHITE);
+        respuesta.setText("");
+        respuesta.setTranslateX(425);
+        respuesta.setTranslateY(178);
+
         //agregar elementos a la interfaz
         contenedorPrincipal.getChildren().addAll(
                 imageView,
                 textField,
-                button
+                button,
+                respuesta
         );
 
     }
@@ -87,6 +112,40 @@ public class Calculadora extends Application {
         String exprePolaco = infixToPostfix.conversionPosfijo(expresion);
 
         enviarMensajeServidor("calcular",expresion);
+
+    }
+
+    private void procesarMensajeServidor(Mensaje mensaje){
+
+        switch (mensaje.getAccion()){
+
+            case "respuesta_calculo" -> {
+
+                Object respuestaExpresion = mensaje.getRespuesta();
+
+                if (respuestaExpresion instanceof Integer){
+                    Platform.runLater(()->{
+                        int aux = (Integer) respuestaExpresion;
+                        respuesta.setText(String.valueOf(aux));
+
+                    });
+                }else if (respuestaExpresion instanceof Long){
+                    Platform.runLater(()->{
+                        long aux = (Long) respuestaExpresion;
+                        respuesta.setText(String.valueOf(aux));
+
+                    });
+                }else if (respuestaExpresion instanceof Double){
+                    Platform.runLater(()->{
+                        double aux = (Double) respuestaExpresion;
+                        respuesta.setText(String.valueOf(aux));
+
+                    });
+                }
+
+            }
+
+        }
 
     }
 
@@ -129,6 +188,7 @@ public class Calculadora extends Application {
             Mensaje mensaje = new Mensaje();
             mensaje.setAccion(accion);
             mensaje.setExpresionMatematica(expresion);
+            mensaje.setPuerto(puerto);
 
             out.writeObject(mensaje);
             out.flush();
@@ -145,8 +205,33 @@ public class Calculadora extends Application {
 
     }
 
+    @Override
+    public void run(){
 
+        try {
 
+            while (true){
+
+                //Socket que se encarga de escuchar solicitudes entrantes de los clientes
+                Socket socket = serverSocket.accept();
+
+                System.out.println("Cliente conectado desde " + socket.getInetAddress().getHostAddress());
+
+                //leer la cadena de texto del socket
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+
+                Mensaje mensajeServer = (Mensaje) in.readObject();
+
+                //manda a procesar el mensaje del cliente
+                procesarMensajeServidor(mensajeServer);
+
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
 
 
 
